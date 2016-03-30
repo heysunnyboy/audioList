@@ -11,7 +11,6 @@ import UIKit
 class ReAudioListViewController: UIViewController,UITableViewDelegate,UITableViewDataSource {
     @IBOutlet  var tableView1: UITableView!
     var timeTick:NSTimer!
-    var lastIndex:NSIndexPath = NSIndexPath.init()  //上次选中的索引
     var curIndex:NSIndexPath =  NSIndexPath.init()  //当前选中的索引
     var isfirst = true   //判断是否第一次加载列表（） 这次没有上次选中的索引 和当前选中的索引
     var isPlay = false   //是否正在播放
@@ -32,8 +31,6 @@ class ReAudioListViewController: UIViewController,UITableViewDelegate,UITableVie
         tableView1.delegate = self
         tableView1.dataSource = self
         tableView1.tableFooterView = UIView.init()
-        
-        lastIndex = NSIndexPath.init(forItem: 0, inSection: 0)
         //value
         // Do any additional setup after loading the view.
         
@@ -101,10 +98,6 @@ class ReAudioListViewController: UIViewController,UITableViewDelegate,UITableVie
         if isfirst
         {
             //记录当前选中索引
-            lastIndex = indexPath
-            curIndex = indexPath
-            lastAudioPath = cell.aduioPath
-            curAudioPath = cell.aduioPath
             //已非第一次选中
             isfirst = false
             //运行定时器
@@ -117,20 +110,10 @@ class ReAudioListViewController: UIViewController,UITableViewDelegate,UITableVie
         }
         else
         {
-            //记录当前选中索引,上次选中索引
-            lastIndex = curIndex
-            curIndex = indexPath
-            lastAudioPath = curAudioPath
-            curAudioPath = cell.aduioPath
             //如果上次选中和当前选中索引相同，说明用户再次点击正在播放的cell，希望音乐暂停
-            if(lastIndex.row == indexPath.row)
+            if(curIndex.row == indexPath.row)
             {
                 //如果正在播放
-                
-                
-
-                
-                
                 
                 if isPlay == true
                 {
@@ -150,25 +133,20 @@ class ReAudioListViewController: UIViewController,UITableViewDelegate,UITableVie
                     
                     timeTick.fire()
                 }
-                
             }
                 //点击一个新的cell播放
             else
             {
                 
-                for var i = 0 ; i <  tableView1.visibleCells.count ; i++
-                {
-                    let cell : ReAudioListTableViewCell = tableView1.visibleCells[i] as! ReAudioListTableViewCell
-                    if cell.tag == lastIndex.row {
-                        let lastcell = tableView1.cellForRowAtIndexPath(lastIndex) as! ReAudioListTableViewCell
-                        lastcell.stopPlay()
-                    }
+                if let lastcell : ReAudioListTableViewCell = tableView1.cellForRowAtIndexPath(curIndex) as? ReAudioListTableViewCell {
+                    lastcell.stopPlay()
                 }
+                
                 if RecorderTool.getTool().player.playing {
                     RecorderTool.getTool().player.stop()
                 }
-
-
+                
+                
                 //当前cell 开始播放
                 cell.startPlay()
                 isPlay = true
@@ -179,10 +157,10 @@ class ReAudioListViewController: UIViewController,UITableViewDelegate,UITableVie
                 timeTick.fire()
                 
             }
+            
+         }
+        curIndex = indexPath
         }
-        
-        
-    }
     /*
      // MARK: - Navigation
      
@@ -195,47 +173,33 @@ class ReAudioListViewController: UIViewController,UITableViewDelegate,UITableVie
     func playingAction()
     {
         let recordTool = RecorderTool.getTool()
-        if recordTool.player.playing
-        {
             isPlay = true
             if let audioplayer = recordTool.player {
-                for var i = 0 ; i <  tableView1.visibleCells.count ; i++
+                //
+                //修改上次选中cell的播放状态
+                if audioplayer.playing
                 {
-                    //
-                    //修改上次选中cell的播放状态
-                    let cell : ReAudioListTableViewCell = tableView1.visibleCells[i] as! ReAudioListTableViewCell
-                    print("last index",lastIndex.row)
-                    print("cur index",curIndex.row)
+                if   let cell : ReAudioListTableViewCell = tableView1.cellForRowAtIndexPath(curIndex) as? ReAudioListTableViewCell{
                     
-                    if cell.tag == curIndex.row
+                    let tt = Float(audioplayer.currentTime) //播放器播放时间
+                    let p:Float = tt / 65.0 //本地歌曲（63秒）
+                    cell.playBar.playProgress(CGFloat(p))
+                    cell.playBar.timeStart.text = cell.playBar.calTime(Int(tt))
+                    
+                }
+                }
+                else
+                {
+                    if   let cell : ReAudioListTableViewCell = tableView1.cellForRowAtIndexPath(curIndex) as? ReAudioListTableViewCell
                     {
-                        let tt = Float(audioplayer.currentTime) //播放器播放时间
-                        let tt1 = Int(audioplayer.currentTime)
-                        let p:Float = tt / 65.0 //本地歌曲（63秒）
-                        cell.playBar.playProgress(CGFloat(p))
-                        cell.playBar.timeStart.text = cell.playBar.calTime(tt1)
-                        
+                        cell.noPlay()
                     }
-                    
-                }
-            }
-        }
-            //播放器停止播放
-        else
-        {
-            for var i = 0 ; i <  tableView1.visibleCells.count ; i++
-            {
-                let cell : ReAudioListTableViewCell = tableView1.visibleCells[i] as! ReAudioListTableViewCell
-                if cell.tag == curIndex.row
-                {
-                    
                     isPlay = false
-                    curCell?.noPlay()
                     timeTick.invalidate()
-                }
+               }
             }
-        }
+                //播放器停止播放
     }
-    
-    
+        
+        
 }
