@@ -162,7 +162,7 @@ class RecorderTool: NSObject {
                 }
                 
                 arr += [audioDict]
-                print("arr is %@",arr)
+
                 userDefault.setObject(arr, forKey: "audio")
                 userDefault.synchronize()
                 

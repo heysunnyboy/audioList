@@ -51,7 +51,7 @@ class ReAudioListTableViewCell: UITableViewCell {
     {
         audioDict = dict
         detail.text = dict["time"]! + " (" + dict["size"]! + "MB)"
-        print(dict["second"])
+        
         playBar.endTime.text = calTime( Float(dict["second"]!)!)
     }
        func startPlay()
@@ -83,9 +83,8 @@ class ReAudioListTableViewCell: UITableViewCell {
     func calTime(second : Float) ->String{
         
         let hour = Int(second / 3600)
-        print("hour is",hour)
         let minutes = Int(Int(second / 60) - hour*60)
-        print("minute is ",minutes)
+
         let second = second % 60
         var minuteStr = ""
         var secondStr = ""
@@ -105,7 +104,7 @@ class ReAudioListTableViewCell: UITableViewCell {
         {
             secondStr =  String(format:"%.0f",second)
         }
-        print("秒数 is  " + secondStr)
+        
        return   minuteStr + "." + secondStr
     }
 

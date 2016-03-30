@@ -15,10 +15,7 @@ class ReAudioListViewController: UIViewController,UITableViewDelegate,UITableVie
     var isfirst = true   //判断是否第一次加载列表（） 这次没有上次选中的索引 和当前选中的索引
     var isPlay = false   //是否正在播放
     var curCell:ReAudioListTableViewCell?
-    var audioArr = [[String:String]]()
-    var audioDict = [[String : String]]()
-    var lastAudioPath:String?
-    var curAudioPath:String?
+    var playProgress:Float = 0.0
     override func viewDidLoad() {
         super.viewDidLoad()
         self.title = "储存夹"
@@ -31,6 +28,7 @@ class ReAudioListViewController: UIViewController,UITableViewDelegate,UITableVie
         tableView1.delegate = self
         tableView1.dataSource = self
         tableView1.tableFooterView = UIView.init()
+        self.automaticallyAdjustsScrollViewInsets = false
         //value
         // Do any additional setup after loading the view.
         
@@ -71,6 +69,7 @@ class ReAudioListViewController: UIViewController,UITableViewDelegate,UITableVie
                 if isPlay == true
                 {
                     cell.playBtn.selected = true
+                    cell.playBar.playProgress(CGFloat(playProgress))
                 }
                     //如果没有播放显示未播放状态
                 else
@@ -94,7 +93,7 @@ class ReAudioListViewController: UIViewController,UITableViewDelegate,UITableVie
     }
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         let cell = tableView.cellForRowAtIndexPath(indexPath) as! ReAudioListTableViewCell
-        
+        //如果首次播放 curIndex 没有赋值 ，需要特殊处理一下
         if isfirst
         {
             //记录当前选中索引
@@ -102,11 +101,14 @@ class ReAudioListViewController: UIViewController,UITableViewDelegate,UITableVie
             isfirst = false
             //运行定时器
             timeTick = NSTimer.scheduledTimerWithTimeInterval(1, target: self, selector: "playingAction", userInfo: nil, repeats: true)
-            NSRunLoop.currentRunLoop().addTimer(timeTick, forMode: NSRunLoopCommonModes)
+//            NSRunLoop.currentRunLoop().addTimer(timeTick, forMode: NSRunLoopCommonModes)
             tableView.deselectRowAtIndexPath(indexPath, animated: true)
             cell.startPlay()
-            timeTick.fire()
+           //////////////////////////////////注意
+           ////////////curIndex = indexPath 需要写在timeTick.fire() 之前，因为fire() 会让定时器先跑完一次方法，才会执行下面的代码，由于这个curIndex 赋值在定时器方法用到，所以需要先赋值，如果想改变可以将定时器放入队列中
             
+            curIndex = indexPath
+            timeTick.fire()
         }
         else
         {
@@ -132,12 +134,14 @@ class ReAudioListViewController: UIViewController,UITableViewDelegate,UITableVie
                     cell.playBtn.selected = true
                     
                     timeTick.fire()
+                    curIndex = indexPath
                 }
             }
                 //点击一个新的cell播放
             else
             {
-                
+                //////////////////////////////////注意
+                ////////////需要判断lastcell 是否为空，如果lastcell 不可见可能会为空
                 if let lastcell : ReAudioListTableViewCell = tableView1.cellForRowAtIndexPath(curIndex) as? ReAudioListTableViewCell {
                     lastcell.stopPlay()
                 }
@@ -154,13 +158,14 @@ class ReAudioListViewController: UIViewController,UITableViewDelegate,UITableVie
                 timeTick = NSTimer.scheduledTimerWithTimeInterval(1, target: self, selector: "playingAction", userInfo: nil, repeats: true)
                 NSRunLoop.currentRunLoop().addTimer(timeTick, forMode: NSRunLoopCommonModes)
                 tableView.deselectRowAtIndexPath(indexPath, animated: true)
+                curIndex = indexPath
                 timeTick.fire()
                 
             }
             
          }
-        curIndex = indexPath
-        }
+        
+    }
     /*
      // MARK: - Navigation
      
@@ -177,15 +182,14 @@ class ReAudioListViewController: UIViewController,UITableViewDelegate,UITableVie
             if let audioplayer = recordTool.player {
                 //
                 //修改上次选中cell的播放状态
+                let tt = Float(audioplayer.currentTime) //播放器播放时间
+                playProgress = tt / 65.0 //本地歌曲（63秒）
                 if audioplayer.playing
                 {
                 if   let cell : ReAudioListTableViewCell = tableView1.cellForRowAtIndexPath(curIndex) as? ReAudioListTableViewCell{
-                    
-                    let tt = Float(audioplayer.currentTime) //播放器播放时间
-                    let p:Float = tt / 65.0 //本地歌曲（63秒）
-                    cell.playBar.playProgress(CGFloat(p))
+                   
+                    cell.playBar.playProgress(CGFloat(playProgress))
                     cell.playBar.timeStart.text = cell.playBar.calTime(Int(tt))
-                    
                 }
                 }
                 else
@@ -200,6 +204,7 @@ class ReAudioListViewController: UIViewController,UITableViewDelegate,UITableVie
             }
                 //播放器停止播放
     }
-        
+   
+    
         
 }

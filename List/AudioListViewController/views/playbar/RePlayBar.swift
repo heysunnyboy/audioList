@@ -67,7 +67,7 @@ class RePlayBar: UIView {
         
         let hour = second / 3600
         let minutes = second / 60 - hour*60
-        print("second is ",second)
+
         let second = Int(second % 60)
         var minuteStr = ""
         var secondStr = ""
@@ -79,7 +79,7 @@ class RePlayBar: UIView {
         {
             minuteStr = String(format:"%d",minutes)
         }
-        print("分数 is ",minuteStr)
+
         if second < 10
         {
             secondStr = "0" + String(format:"%d",second)
@@ -88,7 +88,6 @@ class RePlayBar: UIView {
         {
             secondStr =  String(format:"%d",second)
         }
-        print("秒数 is  " + secondStr)
         return   minuteStr + "." + secondStr
     }
 
